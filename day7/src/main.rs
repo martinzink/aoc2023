@@ -23,36 +23,39 @@ fn find_max_key<K, V>(a_hash_map: &HashMap<K, V>) -> Option<&K>
 
 fn get_camel_rank(cards: &Vec<u32>) -> u32 {
     let mut card_rarity: HashMap<u32, u32> = HashMap::new();
-    for card in cards {
-        let current_count = card_rarity.get(&card).unwrap_or(&0);
-        card_rarity.insert(*card, current_count+1);
+
+    for &card in cards {
+        *card_rarity.entry(card).or_insert(0) += 1;
     }
     if card_rarity.len() == 1 {
         return 7;
     }
 
-    let num_of_jokers = *card_rarity.get(&1).unwrap_or(&0);
-    card_rarity.remove(&1);
+    let num_of_jokers = card_rarity.remove(&1).unwrap_or(0);
     let max_value_key = find_max_key(&card_rarity).unwrap();
-    let curr_value = card_rarity.get(max_value_key).unwrap();
-    card_rarity.insert(*max_value_key, curr_value+num_of_jokers);
+    let curr_value = card_rarity.get(&max_value_key).unwrap();
+    card_rarity.insert(*max_value_key, *curr_value + num_of_jokers);
+
     if card_rarity.values().any(|&x| x == 5) {
         return 7;
     }
+
     if card_rarity.values().any(|&x| x == 4) {
         return 6;
     }
+
     if card_rarity.values().any(|&x| x == 3) {
         if card_rarity.values().any(|&x| x == 2) {
             return 5;
         }
         return 4;
     }
+
     match card_rarity.len() {
-        3 => return 3,
-        4 => return 2,
-        5 => return 1,
-        _ => panic!("Should be something else")
+        3 => 3,
+        4 => 2,
+        5 => 1,
+        _ => panic!("Should be something else"),
     }
 }
 
