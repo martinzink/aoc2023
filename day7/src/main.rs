@@ -11,13 +11,31 @@ struct GameData {
     camel_rank: u32,
 }
 
+fn find_max_key<K, V>(a_hash_map: &HashMap<K, V>) -> Option<&K>
+    where
+        V: Ord,
+{
+    a_hash_map
+        .iter()
+        .max_by(|a, b| a.1.cmp(&b.1))
+        .map(|(k, _v)| k)
+}
+
 fn get_camel_rank(cards: &Vec<u32>) -> u32 {
     let mut card_rarity: HashMap<u32, u32> = HashMap::new();
     for card in cards {
         let current_count = card_rarity.get(&card).unwrap_or(&0);
         card_rarity.insert(*card, current_count+1);
     }
+    if card_rarity.len() == 1 {
+        return 7;
+    }
 
+    let num_of_jokers = *card_rarity.get(&1).unwrap_or(&0);
+    card_rarity.remove(&1);
+    let max_value_key = find_max_key(&card_rarity).unwrap();
+    let curr_value = card_rarity.get(max_value_key).unwrap();
+    card_rarity.insert(*max_value_key, curr_value+num_of_jokers);
     if card_rarity.values().any(|&x| x == 5) {
         return 7;
     }
@@ -91,7 +109,7 @@ fn convert_char_to_value(c: char) -> u32 {
     match c {
         '2'..='9' => c.to_digit(10).unwrap(),
         'T' => 10,
-        'J' => 11,
+        'J' => 1,
         'Q' => 12,
         'K' => 13,
         'A' => 14,
