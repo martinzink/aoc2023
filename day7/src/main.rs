@@ -48,16 +48,12 @@ fn get_camel_rank(cards: &Vec<u32>) -> u32 {
         }
         return 4;
     }
-    if card_rarity.len() == 3 {
-        return 3;
+    match card_rarity.len() {
+        3 => return 3,
+        4 => return 2,
+        5 => return 1,
+        _ => panic!("Should be something else")
     }
-    if card_rarity.len() == 4 {
-        return 2;
-    }
-    if card_rarity.len() == 5 {
-        return 1;
-    }
-    panic!("Should be something else");
 }
 
 impl std::str::FromStr for GameData {
