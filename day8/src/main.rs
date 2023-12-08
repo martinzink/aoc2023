@@ -80,10 +80,10 @@ fn star_two(input: &str) -> u32 {
     let mut steps = 0;
 
     let mut instructions = instructions.chars().cycle();
-    let mut good_coords = HashMap::new();
-    for
     while !done(&curr_nodes) {
-
+        if steps%1000 == 0 {
+            println!("{}", steps);
+        }
         match instructions.next().unwrap() {
             'L' => {
                 for curr_node in &mut curr_nodes {
