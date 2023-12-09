@@ -65,7 +65,6 @@ fn star_two(input_str: &str) -> u32 {
             .collect::<Vec<u32>>()
             .len();
         if num_of_matching_tickets > 0 {
-            let base: u32 = 2;
             number_of_wins_per_id.insert(game_data.card_id, num_of_matching_tickets);
         }
         copies.insert(game_data.card_id, 1);
@@ -82,7 +81,7 @@ fn star_two(input_str: &str) -> u32 {
                 .or_insert(1);
         }
     }
-    for (id, num) in copies {
+    for (_, num) in copies {
         sum += num;
     }
     return sum as u32;

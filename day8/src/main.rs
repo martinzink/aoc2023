@@ -1,4 +1,3 @@
-use petgraph::graphmap::DiGraphMap;
 use regex::Regex;
 use std::collections::HashMap;
 

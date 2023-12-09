@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::ptr::hash;
 
 const EXAMPLE: &str = include_str!("example.txt");
 const INPUT: &str = include_str!("input.txt");

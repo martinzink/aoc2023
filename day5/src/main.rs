@@ -1,7 +1,6 @@
 mod seed_range;
 
 use crate::seed_range::SeedRange;
-use std::cmp;
 
 const EXAMPLE: &str = include_str!("example.txt");
 const INPUT: &str = include_str!("input.txt");
