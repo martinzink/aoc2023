@@ -11,7 +11,7 @@ fn parse_start_values(line: &str) -> Vec<i64> {
 fn generate_pyramids(start_values: Vec<i64>) -> Vec<Vec<i64>> {
     let mut pyramid: Vec<Vec<i64>> = Vec::new();
     pyramid.push(start_values);
-    while (!pyramid.last().unwrap().iter().all(|v| *v == 0)) {
+    while !pyramid.last().unwrap().iter().all(|v| *v == 0) {
         let original_vec = pyramid.last().unwrap();
         let differences: Vec<_> = original_vec
             .iter()
