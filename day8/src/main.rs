@@ -93,7 +93,6 @@ fn star_two(input: &str) -> i64 {
             panic!("no nodes")
         }
     }
-    let mut steps = 0;
 
     let mut good_coords_map = HashMap::new();
     for start_node in start_nodes {
