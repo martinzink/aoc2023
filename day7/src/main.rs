@@ -1,4 +1,4 @@
-use std::collections::{HashMap};
+use std::collections::HashMap;
 use std::ptr::hash;
 
 const EXAMPLE: &str = include_str!("example.txt");
@@ -12,8 +12,8 @@ struct GameData {
 }
 
 fn find_max_key<K, V>(a_hash_map: &HashMap<K, V>) -> Option<&K>
-    where
-        V: Ord,
+where
+    V: Ord,
 {
     a_hash_map
         .iter()
@@ -76,7 +76,11 @@ impl std::str::FromStr for GameData {
         let bid: u32 = bid_str.parse().map_err(|_| "Failed to parse bid")?;
         let camel_rank = get_camel_rank(&cards);
 
-        Ok(GameData { cards, bid, camel_rank })
+        Ok(GameData {
+            cards,
+            bid,
+            camel_rank,
+        })
     }
 }
 
@@ -116,7 +120,7 @@ fn convert_char_to_value(c: char) -> u32 {
     }
 }
 
-fn star_one(input: &str) -> u32{
+fn star_one(input: &str) -> u32 {
     let mut cards = Vec::new();
     for line in input.lines() {
         match line.parse::<GameData>() {
@@ -133,7 +137,6 @@ fn star_one(input: &str) -> u32{
     }
     return sum;
 }
-
 
 fn main() {
     println!("{:?}", star_one(INPUT));

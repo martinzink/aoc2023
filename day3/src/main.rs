@@ -1,5 +1,5 @@
-use std::collections::{HashSet};
 use regex::Regex;
+use std::collections::HashSet;
 
 const EXAMPLE: &str = include_str!("example.txt");
 const INPUT: &str = include_str!("input.txt");
@@ -16,7 +16,10 @@ impl Coord {
         for i in -1..2 {
             for j in -1..2 {
                 if i != 0 || j != 0 {
-                    result.insert(Coord{x:self.x+i, y:self.y+j});
+                    result.insert(Coord {
+                        x: self.x + i,
+                        y: self.y + j,
+                    });
                 }
             }
         }
@@ -30,8 +33,7 @@ struct EnginePart {
     coords: Vec<Coord>,
 }
 
-
-fn extract_engines(input: &str, y:i32) -> Vec<EnginePart>{
+fn extract_engines(input: &str, y: i32) -> Vec<EnginePart> {
     let re = Regex::new(r"\d+").unwrap();
 
     let matches: Vec<(usize, usize, &str)> = re
@@ -43,24 +45,30 @@ fn extract_engines(input: &str, y:i32) -> Vec<EnginePart>{
     for (start, end, number) in matches {
         let mut coords: Vec<Coord> = Vec::new();
         for x in start..end {
-            coords.push(Coord{x:x as i32, y});
+            coords.push(Coord { x: x as i32, y });
         }
-        engine_parts.push(EnginePart{value:number.parse::<u32>().unwrap(), coords});
+        engine_parts.push(EnginePart {
+            value: number.parse::<u32>().unwrap(),
+            coords,
+        });
     }
     return engine_parts;
 }
 
 fn star_two(input_str: &str) -> u32 {
     let mut sum = 0;
-    let mut line_num:i32 = 0;
+    let mut line_num: i32 = 0;
     let mut gear_coords = HashSet::new();
     let mut engine_parts: Vec<EnginePart> = Vec::new();
     for input_line in input_str.lines() {
         engine_parts.append(&mut extract_engines(input_line, line_num));
-        let mut char_num:i32 = 0;
+        let mut char_num: i32 = 0;
         for input_char in input_line.chars() {
             if input_char == '*' {
-                gear_coords.insert(Coord{x:char_num, y:line_num});
+                gear_coords.insert(Coord {
+                    x: char_num,
+                    y: line_num,
+                });
             }
             char_num += 1;
         }
@@ -69,7 +77,16 @@ fn star_two(input_str: &str) -> u32 {
 
     for gear_coord in &gear_coords {
         let mut neighbours = gear_coord.get_neighbours();
-        let engine_parts_next_to_gear =  engine_parts.iter().filter(|engine_part| { engine_part.coords.iter().any(|engine_coord| {neighbours.contains(engine_coord)}) }).cloned().collect::<Vec<EnginePart>>();
+        let engine_parts_next_to_gear = engine_parts
+            .iter()
+            .filter(|engine_part| {
+                engine_part
+                    .coords
+                    .iter()
+                    .any(|engine_coord| neighbours.contains(engine_coord))
+            })
+            .cloned()
+            .collect::<Vec<EnginePart>>();
         if engine_parts_next_to_gear.len() == 2 {
             sum += (engine_parts_next_to_gear[0].value * engine_parts_next_to_gear[1].value);
         }
@@ -78,18 +95,20 @@ fn star_two(input_str: &str) -> u32 {
     return sum;
 }
 
-
 fn star_one(input_str: &str) -> u32 {
     let mut sum = 0;
-    let mut line_num:i32 = 0;
+    let mut line_num: i32 = 0;
     let mut symbol_coords = HashSet::new();
     let mut engine_parts: Vec<EnginePart> = Vec::new();
     for input_line in input_str.lines() {
         engine_parts.append(&mut extract_engines(input_line, line_num));
-        let mut char_num:i32 = 0;
+        let mut char_num: i32 = 0;
         for input_char in input_line.chars() {
             if !input_char.is_numeric() && input_char != '.' {
-                symbol_coords.insert(Coord{x:char_num, y:line_num});
+                symbol_coords.insert(Coord {
+                    x: char_num,
+                    y: line_num,
+                });
             }
             char_num += 1;
         }
@@ -105,12 +124,13 @@ fn star_one(input_str: &str) -> u32 {
         if a.len() > 0 {
             sum += engine_part.value;
         }
-        println!("for engine {:?} neighbours are {:?}", engine_part, neighbours);
+        println!(
+            "for engine {:?} neighbours are {:?}",
+            engine_part, neighbours
+        );
     }
     return sum;
 }
-
-
 
 fn main() {
     println!("Example: {}", star_two(EXAMPLE));

@@ -12,25 +12,35 @@ struct Ball {
 
 impl Ball {
     fn new(input_str: &str) -> Self {
-        let trimmed=input_str.trim().split_ascii_whitespace().collect::<Vec<&str>>();
+        let trimmed = input_str
+            .trim()
+            .split_ascii_whitespace()
+            .collect::<Vec<&str>>();
         let quantity: u32 = trimmed.get(0).unwrap().parse::<u32>().unwrap();
-        let ball_color =  trimmed.get(1).unwrap().to_string();
-        Self{quantity, ball_color}
+        let ball_color = trimmed.get(1).unwrap().to_string();
+        Self {
+            quantity,
+            ball_color,
+        }
     }
 }
 
 fn star_one(input_str: &str) -> u32 {
-    let max_balls: HashMap<&str, u32> = HashMap::from([
-        ("red", 12),
-        ("green", 13),
-        ("blue", 14),
-    ]);
+    let max_balls: HashMap<&str, u32> = HashMap::from([("red", 12), ("green", 13), ("blue", 14)]);
 
     let mut sum = 0;
 
     for input_line in input_str.lines() {
-        let split_line= input_line.split(':').collect::<Vec<&str>>();
-        let game_id = split_line.get(0).unwrap().split_ascii_whitespace().collect::<Vec<&str>>().get(1).unwrap().parse::<u32>().unwrap();
+        let split_line = input_line.split(':').collect::<Vec<&str>>();
+        let game_id = split_line
+            .get(0)
+            .unwrap()
+            .split_ascii_whitespace()
+            .collect::<Vec<&str>>()
+            .get(1)
+            .unwrap()
+            .parse::<u32>()
+            .unwrap();
         let mut game_data = split_line.get(1).unwrap().to_string();
         let mut game_sets = game_data.split(';').collect::<Vec<&str>>();
         let mut invalid: bool = false;
@@ -44,7 +54,6 @@ fn star_one(input_str: &str) -> u32 {
         if !invalid {
             sum += game_id;
         }
-
     }
     return sum;
 }
@@ -53,7 +62,7 @@ fn star_two(input_str: &str) -> u32 {
     let mut sum = 0;
 
     for input_line in input_str.lines() {
-        let split_line= input_line.split(':').collect::<Vec<&str>>();
+        let split_line = input_line.split(':').collect::<Vec<&str>>();
         let mut game_data = split_line.get(1).unwrap().to_string();
         let mut game_sets = game_data.split(';').collect::<Vec<&str>>();
         let mut game_balls: HashMap<String, u32> = HashMap::from([
@@ -70,7 +79,9 @@ fn star_two(input_str: &str) -> u32 {
                 game_balls.insert(ball_d.ball_color, max(current, current_max));
             }
         }
-        sum += game_balls.get("red").unwrap() * game_balls.get("green").unwrap() * game_balls.get("blue").unwrap();
+        sum += game_balls.get("red").unwrap()
+            * game_balls.get("green").unwrap()
+            * game_balls.get("blue").unwrap();
     }
     return sum;
 }
