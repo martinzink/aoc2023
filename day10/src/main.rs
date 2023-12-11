@@ -1,10 +1,8 @@
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{BufRead, Write};
+use std::io::{BufRead};
 use geo::{Contains, coord, Coord, LineString, Polygon};
 use petgraph::algo::dijkstra;
 use petgraph::graph::{EdgeIndex, NodeIndex, UnGraph};
-use petgraph::dot::{Dot, Config};
 
 use petgraph::visit::{EdgeRef};
 
@@ -20,12 +18,6 @@ const INPUT: &str = include_str!("input.txt");
 struct MyCoord {
     x: i64,
     y: i64,
-}
-
-fn export_to_dot(graph: &UnGraph<MyCoord, i32>, filename: &str) {
-    let dot_data = format!("{:?}", Dot::with_config(graph, &[Config::EdgeNoLabel]));
-    let mut file = File::create(filename).expect("Error creating DOT file");
-    file.write_all(dot_data.as_bytes()).expect("Error writing to DOT file");
 }
 
 impl MyCoord {
@@ -90,39 +82,33 @@ fn remove_non_duplicate_edges(graph: &mut UnGraph<MyCoord, i32>) {
     println!("{} -> {}", before, after);
 }
 
-fn star_one(input: &str, file_name: &str) -> i32 {
+fn star_one(input: &str) -> i32 {
     let (mut graph, coord_to_node, start_point) = parse_graph(input);
     let start_index= coord_to_node.get(&start_point).unwrap();
     remove_non_duplicate_edges(&mut graph);
     remove_non_duplicate_edges(&mut graph);
     let distances = dijkstra(&graph, *start_index, None,|_| 1);
-
-    export_to_dot(&graph, file_name);
 
     return *distances.values().max().unwrap();
 }
 
-fn star_two(input: &str, _file_name: &str) -> i32 {
+fn star_two(input: &str) -> i32 {
     let (mut graph, coord_to_node, start_point) = parse_graph(input);
     let start_index= coord_to_node.get(&start_point).unwrap();
     remove_non_duplicate_edges(&mut graph);
     remove_non_duplicate_edges(&mut graph);
 
 
-    let distances = dijkstra(&graph, *start_index, None,|_| 1);
+    let distances_from_animal = dijkstra(&graph, *start_index, None, |_| 1);
+    let (one_neighbour_id, _) = distances_from_animal.iter().find(|(_aid,adis)| {**adis == 1}).unwrap();
 
-    let (one_neighbour_id, _) = distances.iter().find(|(_aid,adis)| {**adis == 1}).unwrap();
-
-    let asd = graph.edges_connecting(*start_index, *one_neighbour_id).map(|edge|{edge.id()}).collect::<Vec<EdgeIndex>>();
-    for edge in asd {
+    let edges_that_connect_the_loop = graph.edges_connecting(*start_index, *one_neighbour_id).map(|edge|{edge.id()}).collect::<Vec<EdgeIndex>>();
+    for edge in edges_that_connect_the_loop {
         graph.remove_edge(edge);
     }
-    let distances_2 = dijkstra(&graph, *start_index, None,|_| 1);
+    let distances_from_severed_loop = dijkstra(&graph, *start_index, None, |_| 1);
 
-    let mut distances_values = Vec::from_iter(distances.values());
-    distances_values.sort();
-
-    let mut snake = Vec::from_iter(distances_2.iter());
+    let mut snake = Vec::from_iter(distances_from_severed_loop.iter());
 
     snake.sort_by_key(|(_,dis)|{**dis});
     let mut snake_coords = snake.iter().map(|(snake_part_id, _)|{
@@ -147,6 +133,6 @@ fn star_two(input: &str, _file_name: &str) -> i32 {
 }
 
 fn main() {
-    println!("Input: star1 {}", star_one(EXAMPLE_SMALL, "input.dot"));
-    println!("Input: star2 {}", star_two(INPUT, "input.dot"));
+    println!("Input: star1 {}", star_one(EXAMPLE_SMALL));
+    println!("Input: star2 {}", star_two(INPUT));
 }
