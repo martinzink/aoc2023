@@ -77,7 +77,7 @@ fn star_two(input_str: &str) -> u32 {
         for i in 1..num_wins + 1 {
             *copies
                 .entry(id + i as u32)
-                .and_modify(|v| *v += (1 * number_of_copies_for_this_id))
+                .and_modify(|v| *v += 1 * number_of_copies_for_this_id)
                 .or_insert(1);
         }
     }
