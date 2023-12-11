@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, Write};
-use geo::{Contains, coord, Coord, LineString, Polygon, Vector2DOps};
+use geo::{Contains, coord, Coord, LineString, Polygon};
 use petgraph::algo::dijkstra;
-use petgraph::graph::{EdgeIndex, node_index, NodeIndex, UnGraph};
+use petgraph::graph::{EdgeIndex, NodeIndex, UnGraph};
 use petgraph::dot::{Dot, Config};
-use graph_cycles::Cycles;
-use petgraph::visit::{depth_first_search, Dfs, EdgeRef, IntoNodeReferences, NodeFiltered};
-use gnuplot::{Caption, Color, Figure};
 
-use geo_plot::Plot;
+use petgraph::visit::{EdgeRef};
+
+
+
 
 const EXAMPLE: &str = include_str!("example.txt");
 const EXAMPLE_SMALL: &str = include_str!("example_small.txt");
@@ -102,7 +102,7 @@ fn star_one(input: &str, file_name: &str) -> i32 {
     return *distances.values().max().unwrap();
 }
 
-fn star_two(input: &str, file_name: &str) -> i32 {
+fn star_two(input: &str, _file_name: &str) -> i32 {
     let (mut graph, coord_to_node, start_point) = parse_graph(input);
     let start_index= coord_to_node.get(&start_point).unwrap();
     remove_non_duplicate_edges(&mut graph);
@@ -111,7 +111,7 @@ fn star_two(input: &str, file_name: &str) -> i32 {
 
     let distances = dijkstra(&graph, *start_index, None,|_| 1);
 
-    let (one_neighbour_id, _) = distances.iter().find(|(aid,adis)| {**adis == 1}).unwrap();
+    let (one_neighbour_id, _) = distances.iter().find(|(_aid,adis)| {**adis == 1}).unwrap();
 
     let asd = graph.edges_connecting(*start_index, *one_neighbour_id).map(|edge|{edge.id()}).collect::<Vec<EdgeIndex>>();
     for edge in asd {
