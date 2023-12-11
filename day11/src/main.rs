@@ -15,11 +15,11 @@ impl SpaceCoord {
     }
 
     fn sum_x(&self, expansion_multiplier: i64) -> i64 {
-        return self.x + (self.expanded_x * expansion_multiplier);
+        return self.x + (self.expanded_x * (expansion_multiplier - 1));
     }
 
     fn sum_y(&self, expansion_multiplier: i64) -> i64 {
-        return self.y + (self.expanded_y * expansion_multiplier);
+        return self.y + (self.expanded_y * (expansion_multiplier -1));
     }
 }
 #[derive(Debug)]
@@ -68,20 +68,19 @@ fn calc(input: &str, expansion_multiplier: i64) -> i64 {
             if galaxy_coord != galaxy_coord_2 {
                 let x_diff = galaxy_coord_2.sum_x(expansion_multiplier) - galaxy_coord.sum_x(expansion_multiplier);
                 let y_diff = galaxy_coord_2.sum_y(expansion_multiplier) - galaxy_coord.sum_y(expansion_multiplier);
-                println!("{} {}", x_diff, y_diff);
                 sum += x_diff.abs();
                 sum += y_diff.abs();
                 number_of_pairs += 1;
             }
         }
     }
-    println!("{}", number_of_pairs);
     return sum/2;
 }
 
 
 fn main() {
-    assert_eq!(calc(EXAMPLE, 1), 374);
-    assert_eq!(calc(EXAMPLE, 9), 1030);
-    assert_eq!(calc(INPUT, 999999), 685038186836);
+    assert_eq!(calc(EXAMPLE, 2), 374);
+    assert_eq!(calc(EXAMPLE, 10), 1030);
+    assert_eq!(calc(EXAMPLE, 100), 8410);
+    assert_eq!(calc(INPUT, 1000000), 685038186836);
 }
