@@ -41,11 +41,11 @@ fn star_one(input_str: &str) -> u32 {
             .unwrap()
             .parse::<u32>()
             .unwrap();
-        let mut game_data = split_line.get(1).unwrap().to_string();
-        let mut game_sets = game_data.split(';').collect::<Vec<&str>>();
+        let game_data = split_line.get(1).unwrap().to_string();
+        let game_sets = game_data.split(';').collect::<Vec<&str>>();
         let mut invalid: bool = false;
         for game_set in game_sets {
-            let mut game_balls: HashMap<&str, u32> = HashMap::new();
+            let _game_balls: HashMap<&str, u32> = HashMap::new();
             for ball_str in game_set.split(',') {
                 let ball = Ball::new(ball_str);
                 invalid = invalid || max_balls.get(&*ball.ball_color).unwrap() < &ball.quantity;
@@ -63,8 +63,8 @@ fn star_two(input_str: &str) -> u32 {
 
     for input_line in input_str.lines() {
         let split_line = input_line.split(':').collect::<Vec<&str>>();
-        let mut game_data = split_line.get(1).unwrap().to_string();
-        let mut game_sets = game_data.split(';').collect::<Vec<&str>>();
+        let game_data = split_line.get(1).unwrap().to_string();
+        let game_sets = game_data.split(';').collect::<Vec<&str>>();
         let mut game_balls: HashMap<String, u32> = HashMap::from([
             ("red".to_string(), 0),
             ("green".to_string(), 0),
