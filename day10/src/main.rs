@@ -3,9 +3,10 @@ use std::fs::File;
 use std::io::{BufRead, Write};
 use geo::{Contains, coord, Coord, LineString, Polygon, Vector2DOps};
 use petgraph::algo::dijkstra;
-use petgraph::graph::{EdgeIndex, NodeIndex, UnGraph};
+use petgraph::graph::{EdgeIndex, node_index, NodeIndex, UnGraph};
 use petgraph::dot::{Dot, Config};
-use petgraph::visit::{EdgeRef, IntoNodeReferences};
+use graph_cycles::Cycles;
+use petgraph::visit::{depth_first_search, Dfs, EdgeRef, IntoNodeReferences, NodeFiltered};
 use gnuplot::{Caption, Color, Figure};
 
 use geo_plot::Plot;
@@ -101,40 +102,51 @@ fn star_one(input: &str, file_name: &str) -> i32 {
     return *distances.values().max().unwrap();
 }
 
-fn plot_polygon(polygon: &geo::Polygon<f64>) {
-    let mut fg = Figure::new();
-    // Extract the exterior ring coordinates
-    let (x, y): (Vec<f64>, Vec<f64>) = polygon.exterior().points_iter().map(|p| p.x_y()).unzip();
-    fg.lines(x, y);
-
-    fg.show().unwrap();
-}
-
 fn star_two(input: &str, file_name: &str) -> i32 {
     let (mut graph, coord_to_node, start_point) = parse_graph(input);
     let start_index= coord_to_node.get(&start_point).unwrap();
     remove_non_duplicate_edges(&mut graph);
     remove_non_duplicate_edges(&mut graph);
+
+
     let distances = dijkstra(&graph, *start_index, None,|_| 1);
-    let mut loop_coords = distances.keys().map(|node_id| {graph.node_weight(*node_id).unwrap().clone()}).collect::<Vec<MyCoord>>().iter().map(|c|coord!{x:c.x as f64, y:c.y as f64}).collect::<Vec<Coord<f64>>>();
-    loop_coords.push(loop_coords.first().unwrap().clone());
-    let polygon = Polygon::new(LineString::new(loop_coords.clone()), vec![]);
+
+    let (one_neighbour_id, _) = distances.iter().find(|(aid,adis)| {**adis == 1}).unwrap();
+
+    let asd = graph.edges_connecting(*start_index, *one_neighbour_id).map(|edge|{edge.id()}).collect::<Vec<EdgeIndex>>();
+    for edge in asd {
+        graph.remove_edge(edge);
+    }
+    let distances_2 = dijkstra(&graph, *start_index, None,|_| 1);
+
+    let mut distances_values = Vec::from_iter(distances.values());
+    distances_values.sort();
+
+    let mut snake = Vec::from_iter(distances_2.iter());
+
+    snake.sort_by_key(|(_,dis)|{**dis});
+    let mut snake_coords = snake.iter().map(|(snake_part_id, _)|{
+        let mycoord = graph.node_weight(**snake_part_id);
+        return coord!{x: mycoord.unwrap().x as f64, y:mycoord.unwrap().y as f64}
+    }).collect::<Vec<Coord>>();
+
+    snake_coords.push(snake_coords.first().unwrap().clone());
+
+
+    let polygon = Polygon::new(LineString::new(snake_coords.clone()), vec![]);
     let mut sum = 0;
     let mut inside_coords = Vec::new();
-    plot_polygon(&polygon);
     for coord in coord_to_node.keys().map(|c| {coord!{x: c.x as f64,y: c.y as f64}}) {
-        println!("{:?} inside loop? {}, inside polygon {}", coord, loop_coords.contains(&coord), polygon.contains(&coord));
-        if polygon.contains(&coord) {
+        if polygon.contains(&coord) && !snake_coords.contains(&coord){
             inside_coords.push(coord);
             sum += 1;
         }
     }
-    println!("{:?}", inside_coords);
 
     return sum;
 }
 
 fn main() {
     println!("Input: star1 {}", star_one(EXAMPLE_SMALL, "input.dot"));
-    println!("Input: star2 {}", star_two(EXAMPLE_SMALL, "input.dot"));
+    println!("Input: star2 {}", star_two(INPUT, "input.dot"));
 }
