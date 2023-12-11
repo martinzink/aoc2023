@@ -76,7 +76,7 @@ fn star_two(input_str: &str) -> u32 {
     }
 
     for gear_coord in &gear_coords {
-        let mut neighbours = gear_coord.get_neighbours();
+        let neighbours = gear_coord.get_neighbours();
         let engine_parts_next_to_gear = engine_parts
             .iter()
             .filter(|engine_part| {
@@ -88,7 +88,7 @@ fn star_two(input_str: &str) -> u32 {
             .cloned()
             .collect::<Vec<EnginePart>>();
         if engine_parts_next_to_gear.len() == 2 {
-            sum += (engine_parts_next_to_gear[0].value * engine_parts_next_to_gear[1].value);
+            sum += engine_parts_next_to_gear[0].value * engine_parts_next_to_gear[1].value;
         }
     }
 
