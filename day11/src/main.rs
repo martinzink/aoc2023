@@ -24,63 +24,64 @@ impl SpaceCoord {
 }
 #[derive(Debug)]
 struct Universe {
-    galaxies: Vec<SpaceCoord>,
-    empty_rows: Vec<i64>,
-    empty_cols: Vec<i64>
+    galaxies: Vec<SpaceCoord>
 }
 
-fn parse_start_values(input: &str) -> Universe {
-    let mut galaxies = vec!{};
-    let mut empty_rows = vec!{};
-    let mut empty_cols = vec!{};
-    for (line_index, line) in input.lines().enumerate() {
-        if !line.contains('#') {
-            empty_rows.push(line_index as i64);
-        }
-        for (char_index, char) in line.chars().enumerate() {
-            if char == '#' {
-                galaxies.push(SpaceCoord::new(char_index as i64, line_index as i64));
+impl Universe {
+    fn new(input: &str) -> Self {
+        let mut galaxies = vec!{};
+        let mut empty_rows = vec!{};
+        let mut empty_cols = vec!{};
+        for (line_index, line) in input.lines().enumerate() {
+            if !line.contains('#') {
+                empty_rows.push(line_index as i64);
+            }
+            for (char_index, char) in line.chars().enumerate() {
+                if char == '#' {
+                    galaxies.push(SpaceCoord::new(char_index as i64, line_index as i64));
+                }
             }
         }
-    }
-    let number_of_rows = input.lines().count() as i64;
-    for column in 0..number_of_rows {
-        if !galaxies.iter().any(|star_coord|{star_coord.x == column}) {
-            empty_cols.push(column);
-        }
-    }
-    return Universe{galaxies, empty_rows, empty_cols};
-}
-
-fn calc(input: &str, expansion_multiplier: i64) -> i64 {
-    let mut sum = 0;
-    let mut universe = parse_start_values(input);
-    for empty_row in &universe.empty_rows {
-        universe.galaxies.iter_mut().filter(|galaxy| {galaxy.y > *empty_row }).for_each(|galaxy|{galaxy.expanded_y += 1});
-    }
-    for empty_col in &universe.empty_cols {
-        universe.galaxies.iter_mut().filter(|galaxy| {galaxy.x > *empty_col }).for_each(|galaxy|{galaxy.expanded_x += 1});
-    }
-
-    let mut number_of_pairs = 0;
-    for galaxy_coord in &universe.galaxies {
-        for galaxy_coord_2 in &universe.galaxies {
-            if galaxy_coord != galaxy_coord_2 {
-                let x_diff = galaxy_coord_2.sum_x(expansion_multiplier) - galaxy_coord.sum_x(expansion_multiplier);
-                let y_diff = galaxy_coord_2.sum_y(expansion_multiplier) - galaxy_coord.sum_y(expansion_multiplier);
-                sum += x_diff.abs();
-                sum += y_diff.abs();
-                number_of_pairs += 1;
+        let number_of_rows = input.lines().count() as i64;
+        for column in 0..number_of_rows {
+            if !galaxies.iter().any(|star_coord|{star_coord.x == column}) {
+                empty_cols.push(column);
             }
         }
+
+        for empty_row in &empty_rows {
+            galaxies.iter_mut().filter(|galaxy| {galaxy.y > *empty_row }).for_each(|galaxy|{galaxy.expanded_y += 1});
+        }
+        for empty_col in &empty_cols {
+            galaxies.iter_mut().filter(|galaxy| {galaxy.x > *empty_col }).for_each(|galaxy|{galaxy.expanded_x += 1});
+        }
+
+        return Universe{galaxies};
     }
-    return sum/2;
+    fn score(&self, expansion_multiplier: i64) -> i64 {
+        let mut sum = 0;
+        for galaxy_coord in &self.galaxies {
+            for galaxy_coord_2 in &self.galaxies {
+                if galaxy_coord != galaxy_coord_2 {
+                    let x_diff = galaxy_coord_2.sum_x(expansion_multiplier) - galaxy_coord.sum_x(expansion_multiplier);
+                    let y_diff = galaxy_coord_2.sum_y(expansion_multiplier) - galaxy_coord.sum_y(expansion_multiplier);
+                    sum += x_diff.abs();
+                    sum += y_diff.abs();
+                }
+            }
+        }
+        return sum/2;
+    }
 }
 
 
 fn main() {
-    assert_eq!(calc(EXAMPLE, 2), 374);
-    assert_eq!(calc(EXAMPLE, 10), 1030);
-    assert_eq!(calc(EXAMPLE, 100), 8410);
-    assert_eq!(calc(INPUT, 1000000), 685038186836);
+    let example_universe = Universe::new(EXAMPLE);
+    assert_eq!(example_universe.score(2), 374);
+    assert_eq!(example_universe.score(10), 1030);
+    assert_eq!(example_universe.score(100), 8410);
+
+    let input_universe = Universe::new(INPUT);
+    assert_eq!(input_universe.score(2), 9556896);
+    assert_eq!(input_universe.score(1000000), 685038186836);
 }
