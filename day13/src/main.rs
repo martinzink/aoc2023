@@ -1,7 +1,6 @@
 use std::iter::zip;
 use std::iter::Iterator;
 
-const EXAMPLE: &str = include_str!("example.txt");
 const INPUT: &str = include_str!("input.txt");
 
 fn transpose(matrix: &Vec<Vec<char>>) -> Vec<Vec<char>> {
@@ -23,7 +22,7 @@ fn transpose(matrix: &Vec<Vec<char>>) -> Vec<Vec<char>> {
     transposed_matrix
 }
 
-fn getDiffs(vec1: &Vec<char>, vec2 :&Vec<char>) -> i64 {
+fn get_diffs(vec1: &Vec<char>, vec2 :&Vec<char>) -> i64 {
     assert_eq!(vec1.len(), vec2.len());
     let mut diff_count = 0;
     for (elem1, elem2) in vec1.iter().zip(vec2.iter()) {
@@ -34,7 +33,7 @@ fn getDiffs(vec1: &Vec<char>, vec2 :&Vec<char>) -> i64 {
     return diff_count;
 }
 
-pub fn getHamming<'a, I, J>(a: I, b: J) -> i64
+pub fn get_hamming<'a, I, J>(a: I, b: J) -> i64
     where
         I: Iterator<Item = &'a Vec<char>>,
         J: Iterator<Item = &'a Vec<char>>,
@@ -42,7 +41,7 @@ pub fn getHamming<'a, I, J>(a: I, b: J) -> i64
 {
     let mut sum = 0;
     for (i,j) in zip(a, b) {
-        sum += getDiffs(i, j);
+        sum += get_diffs(i, j);
     }
     return sum;
 }
@@ -63,20 +62,20 @@ impl Puzzle {
         let char_len = self.chars.len();
 
         for length_thats_not_mirrorsed in 0..char_len-1 {
-            let mut top = self.chars[length_thats_not_mirrorsed..char_len].iter();
-            let mut bottom = self.chars[length_thats_not_mirrorsed..char_len].iter().rev();
+            let top = self.chars[length_thats_not_mirrorsed..char_len].iter();
+            let bottom = self.chars[length_thats_not_mirrorsed..char_len].iter().rev();
             let length = top.len();
             if length % 2 == 1 {
                 continue;
             }
-            let hamming = getHamming(top, bottom);
+            let hamming = get_hamming(top, bottom);
             if hamming == 2 {
                 return Some(length_thats_not_mirrorsed as i64 + length as i64 / 2i64);
             }
 
             let top_2 = self.chars[0..char_len-length_thats_not_mirrorsed].iter();
             let bottom_2 = self.chars[0..char_len-length_thats_not_mirrorsed].iter().rev();
-            let hamming_2 = getHamming(top_2, bottom_2);
+            let hamming_2 = get_hamming(top_2, bottom_2);
             if hamming_2 == 2 {
                 return Some((char_len/2 -length_thats_not_mirrorsed/2) as i64);
             }
