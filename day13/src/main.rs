@@ -1,3 +1,6 @@
+use std::iter::zip;
+use std::iter::Iterator;
+
 const EXAMPLE: &str = include_str!("example.txt");
 const INPUT: &str = include_str!("input.txt");
 
@@ -31,16 +34,17 @@ fn getDiffs(vec1: &Vec<char>, vec2 :&Vec<char>) -> i64 {
     return diff_count;
 }
 
-pub fn getHamming<I, J>(a: I, b: J) -> i64
+pub fn getHamming<'a, I, J>(a: I, b: J) -> i64
     where
-        I: IntoIterator,
-        J: IntoIterator,
+        I: Iterator<Item = &'a Vec<char>>,
+        J: Iterator<Item = &'a Vec<char>>,
         I::Item: PartialEq<J::Item>,
 {
     let mut sum = 0;
-    for (i, j) in (a.into_iter(), b.into_iter()) {
+    for (i,j) in zip(a, b) {
         sum += getDiffs(i, j);
     }
+    println!("{}", sum);
     return sum;
 }
 
@@ -66,16 +70,15 @@ impl Puzzle {
             if length % 2 == 1 {
                 continue;
             }
-            if itertools::equal(top.clone(), bottom.clone()) {
-                for a in top {
-                    println!("{:?}", a);
-                }
+            let hamming = getHamming(top, bottom);
+            if hamming == 2 {
                 return Some(length_thats_not_mirrorsed as i64 + length as i64 / 2i64);
             }
 
-            let mut top_2 = self.chars[0..char_len-length_thats_not_mirrorsed].iter();
-            let mut bottom_2 = self.chars[0..char_len-length_thats_not_mirrorsed].iter().rev();
-            if itertools::equal(top_2.clone(), bottom_2.clone()) {
+            let top_2 = self.chars[0..char_len-length_thats_not_mirrorsed].iter();
+            let bottom_2 = self.chars[0..char_len-length_thats_not_mirrorsed].iter().rev();
+            let hamming_2 = getHamming(top_2, bottom_2);
+            if hamming_2 == 2 {
                 return Some((char_len/2 -length_thats_not_mirrorsed/2) as i64);
             }
         }
