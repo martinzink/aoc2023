@@ -44,7 +44,6 @@ pub fn getHamming<'a, I, J>(a: I, b: J) -> i64
     for (i,j) in zip(a, b) {
         sum += getDiffs(i, j);
     }
-    println!("{}", sum);
     return sum;
 }
 
@@ -88,20 +87,6 @@ impl Puzzle {
     fn transpose(&self) -> Self {
         Self{chars:transpose(&self.chars)}
     }
-
-    fn print(&self) {
-        for line in &self.chars {
-            let s: String = line.iter().collect();
-            println!("{}", s);
-        }
-    }
-
-    fn print_rev(&self) {
-        for line in self.chars.iter().rev() {
-            let s: String = line.iter().collect();
-            println!("{}", s);
-        }
-    }
 }
 
 fn parse_input(input: &str) -> i64 {
@@ -112,19 +97,11 @@ fn parse_input(input: &str) -> i64 {
     let mut sum : i64 = 0;
     for puzzle in &puzzles {
         if let Some(score) = puzzle.find_horizontal_mirror() {
-            println!("{}", score);
             sum += score*100;
         }
         else if let Some(score) = puzzle.transpose().find_horizontal_mirror() {
-            println!("{}", score);
             sum += score;
         } else {
-            puzzle.print();
-            println!("---");
-            puzzle.transpose().print();
-            println!("---");
-            puzzle.transpose().print_rev();
-            puzzle.transpose().find_horizontal_mirror();
             panic!{"NO MIRROR"}
         }
     }
