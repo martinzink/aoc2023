@@ -2,12 +2,6 @@ use std::collections::HashMap;
 const EXAMPLE: &str = include_str!("example.txt");
 const INPUT: &str = include_str!("input.txt");
 
-#[derive(Debug)]
-struct Rock {
-    x: usize,
-    y: usize,
-    empty_above: usize
-}
 #[derive(Debug, Hash, Eq, PartialEq, Clone)]
 struct Map {
     chars: Vec<Vec<char>>,
@@ -133,62 +127,37 @@ impl Map {
     }
 }
 
-fn parseRocks(input: &str) -> Vec<Rock> {
-    let mut rocks = Vec::new();
-    let chars = input.lines().map(|line|{line.chars().collect::<Vec<char>>()}).collect::<Vec<Vec<char>>>();
-    for row_num in 0..chars[0].len() {
-        let mut empty_space_counter = 0;
-        for col_num in 0..chars.len() {
-            let char = chars[col_num][row_num];
-            match char {
-                'O' => rocks.push(Rock{x:row_num, y:col_num, empty_above:empty_space_counter}),
-                '.' => empty_space_counter += 1,
-                '#' => empty_space_counter = 0,
-                _ => panic!("Invalid char"),
-            }
-        }
-    }
-    let mut sum = 0;
-    for rock in &rocks {
-        let score = 100 - (rock.y - rock.empty_above);
-        println!("{:?}: {}", rock, score);
-        sum += score;
-    }
-    println!("{:?}", sum);
-    return rocks;
-}
-
 fn get_spin_load(cache: &HashMap<Map, i64>,cycle_start: i64, repeat_cycle: i64, num_of_spins: i64) -> i64 {
-    let mut target_value = (num_of_spins-cycle_start)%repeat_cycle;
+    let target_value = (num_of_spins-cycle_start)%repeat_cycle;
     let map = cache.iter()
         .find_map(|(key, &val)| if val == target_value { Some(key) } else { None }).unwrap();
     return map.calc_load();
 }
 
 
-
 fn main() {
     let mut map = Map::new(INPUT);
 
-    let mut cache = HashMap::new();
-    let mut cycle_start: Option<i64> = None;
-    let mut repeat_cycle: Option<i64> = None;
-    for i in 1..1000000000i64{
-        map = map.spin();
-        if cache.contains_key(&map) {
-            if cycle_start.is_none() {
-                cycle_start = Some(*cache.get(&map).unwrap());
-                repeat_cycle = Some(i-cycle_start.unwrap());
-                break;
-            }
-        } else {
-            cache.insert(map.clone(), i);
-        }
+    {
+        println!("Part 1: {}", map.tilt_north().calc_load())
     }
-    cache.iter_mut().for_each(|(_, val)| {*val = *val-cycle_start.unwrap()});
-    println!("{} cycle calc: {}",1000000000i64, get_spin_load(&cache, cycle_start.unwrap(), repeat_cycle.unwrap(), 1000000000i64));
-
-    for i in cycle_start.unwrap()..cycle_start.unwrap()+repeat_cycle.unwrap() {
-        println!("{} cycle calc: {}",i, get_spin_load(&cache, cycle_start.unwrap(), repeat_cycle.unwrap(), i));
+    {
+        let mut cache = HashMap::new();
+        let mut cycle_start: Option<i64> = None;
+        let mut repeat_cycle: Option<i64> = None;
+        for i in 1..1000000000i64 {
+            map = map.spin();
+            if cache.contains_key(&map) {
+                if cycle_start.is_none() {
+                    cycle_start = Some(*cache.get(&map).unwrap());
+                    repeat_cycle = Some(i - cycle_start.unwrap());
+                    break;
+                }
+            } else {
+                cache.insert(map.clone(), i);
+            }
+        }
+        cache.iter_mut().for_each(|(_, val)| { *val = *val - cycle_start.unwrap() });
+        println!("Part 2 {}", get_spin_load(&cache, cycle_start.unwrap(), repeat_cycle.unwrap(), 1000000000i64));
     }
 }
