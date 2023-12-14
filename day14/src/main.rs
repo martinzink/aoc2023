@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+
 const EXAMPLE: &str = include_str!("example.txt");
 const INPUT: &str = include_str!("input.txt");
 
@@ -9,8 +10,8 @@ struct Map {
 
 impl Map {
     fn new(input: &str) -> Self {
-        let chars = input.lines().map(|line|{line.chars().collect::<Vec<char>>()}).collect::<Vec<Vec<char>>>();
-        return Self{chars};
+        let chars = input.lines().map(|line| { line.chars().collect::<Vec<char>>() }).collect::<Vec<Vec<char>>>();
+        return Self { chars };
     }
 
     fn tilt_north(&self) -> Self {
@@ -22,17 +23,17 @@ impl Map {
                 let char = self.chars[col_num][row_num];
                 char_copy[col_num][row_num] = '.';
                 match char {
-                    'O' => char_copy[col_num-empty_space_counter][row_num] = 'O',
+                    'O' => char_copy[col_num - empty_space_counter][row_num] = 'O',
                     '.' => empty_space_counter += 1,
                     '#' => {
                         empty_space_counter = 0;
                         char_copy[col_num][row_num] = '#';
-                    },
+                    }
                     _ => panic!("Invalid char"),
                 }
             }
         }
-        return Self{chars:char_copy}
+        return Self { chars: char_copy };
     }
 
     fn tilt_west(&self) -> Self {
@@ -44,17 +45,17 @@ impl Map {
                 let char = self.chars[col_num][row_num];
                 char_copy[col_num][row_num] = '.';
                 match char {
-                    'O' => char_copy[col_num][row_num-empty_space_counter] = 'O',
+                    'O' => char_copy[col_num][row_num - empty_space_counter] = 'O',
                     '.' => empty_space_counter += 1,
                     '#' => {
                         empty_space_counter = 0;
                         char_copy[col_num][row_num] = '#';
-                    },
+                    }
                     _ => panic!("Invalid char"),
                 }
             }
         }
-        return Self{chars:char_copy}
+        return Self { chars: char_copy };
     }
 
     fn tilt_south(&self) -> Self {
@@ -66,17 +67,17 @@ impl Map {
                 let char = self.chars[col_num][row_num];
                 char_copy[col_num][row_num] = '.';
                 match char {
-                    'O' => char_copy[col_num+empty_space_counter][row_num] = 'O',
+                    'O' => char_copy[col_num + empty_space_counter][row_num] = 'O',
                     '.' => empty_space_counter += 1,
                     '#' => {
                         empty_space_counter = 0;
                         char_copy[col_num][row_num] = '#';
-                    },
+                    }
                     _ => panic!("Invalid char"),
                 }
             }
         }
-        return Self{chars:char_copy}
+        return Self { chars: char_copy };
     }
 
     fn tilt_east(&self) -> Self {
@@ -88,17 +89,17 @@ impl Map {
                 let char = self.chars[col_num][row_num];
                 char_copy[col_num][row_num] = '.';
                 match char {
-                    'O' => char_copy[col_num][row_num+empty_space_counter] = 'O',
+                    'O' => char_copy[col_num][row_num + empty_space_counter] = 'O',
                     '.' => empty_space_counter += 1,
                     '#' => {
                         empty_space_counter = 0;
                         char_copy[col_num][row_num] = '#';
-                    },
+                    }
                     _ => panic!("Invalid char"),
                 }
             }
         }
-        return Self{chars:char_copy}
+        return Self { chars: char_copy };
     }
 
     fn spin(&self) -> Self {
@@ -109,10 +110,10 @@ impl Map {
         return spinned;
     }
 
-    fn calc_load(&self) -> i64{
+    fn calc_load(&self) -> i64 {
         let mut sum = 0;
         let max_lines = self.chars.len();
-        for (i, line) in self.chars.iter().enumerate(){
+        for (i, line) in self.chars.iter().enumerate() {
             for char in line {
                 if *char == 'O' {
                     sum += max_lines - i;
@@ -123,12 +124,12 @@ impl Map {
     }
 
     fn print(&self) {
-        self.chars.iter().for_each(|line|{ println!("{}", line.into_iter().collect::<String>());});
+        self.chars.iter().for_each(|line| { println!("{}", line.into_iter().collect::<String>()); });
     }
 }
 
-fn get_spin_load(cache: &HashMap<Map, i64>,cycle_start: i64, repeat_cycle: i64, num_of_spins: i64) -> i64 {
-    let target_value = (num_of_spins-cycle_start)%repeat_cycle;
+fn get_spin_load(cache: &HashMap<Map, i64>, cycle_start: i64, repeat_cycle: i64, num_of_spins: i64) -> i64 {
+    let target_value = (num_of_spins - cycle_start) % repeat_cycle + cycle_start;
     let map = cache.iter()
         .find_map(|(key, &val)| if val == target_value { Some(key) } else { None }).unwrap();
     return map.calc_load();
@@ -157,7 +158,6 @@ fn main() {
                 cache.insert(map.clone(), i);
             }
         }
-        cache.iter_mut().for_each(|(_, val)| { *val = *val - cycle_start.unwrap() });
         println!("Part 2 {}", get_spin_load(&cache, cycle_start.unwrap(), repeat_cycle.unwrap(), 1000000000i64));
     }
 }
