@@ -98,19 +98,12 @@ fn new_map(input: &str) -> HashMap<Point, char> {
     return map;
 }
 
-fn calc_from_loc(input: &str) {
-
-}
-
-fn main() {
-    let input = INPUT;
-    let map = new_map(input);
+fn calc_from_loc(map: &HashMap<Point, char>, start_laser: LaserLocation) -> usize {
     let mut energized_locations = HashSet::new();
     let mut laser_starts = Vec::new();
     let mut visited_laser_starts = HashSet::new();
 
-    laser_starts.push(LaserLocation{current_loc:Point{x:0,y:0}, current_direction:Point{x:1, y:0}});
-    energized_locations.insert(Point{x:0,y:0});
+    laser_starts.push(start_laser);
     while !laser_starts.is_empty() {
         let mut current_laser_start = laser_starts.pop().unwrap();
         visited_laser_starts.insert(current_laser_start);
@@ -123,16 +116,45 @@ fn main() {
         }
     }
 
-    for i in 0..input.lines().next().unwrap().len() {
-        for j in 0..input.lines().count() {
-            if energized_locations.contains(&Point { x: j as i64, y: i as i64 }) {
-                print!("#")
-            } else {
-                print!(".");
-            }
+    return energized_locations.len();
+}
+
+fn main() {
+    let input = INPUT;
+    let map = new_map(input);
+
+    let min_x = 0i64;
+    let min_y = 0i64;
+    let max_x = input.lines().count() as i64;
+    let max_y = input.lines().next().unwrap().len() as i64;
+
+    let mut calcs = Vec::new();
+
+    for x in min_x..max_x {
+        {
+            let start_point = Point { x, y: min_y };
+            let start_dir = Point { x: 0, y: 1 };
+            calcs.push(calc_from_loc(&map, LaserLocation { current_loc: start_point, current_direction: start_dir }));
         }
-        println!();
+        {
+            let start_point = Point { x, y: max_y-1 };
+            let start_dir = Point { x: 0, y: -1 };
+            calcs.push(calc_from_loc(&map, LaserLocation { current_loc: start_point, current_direction: start_dir }));
+        }
     }
 
-    println!("{}", energized_locations.len());
+    for y in min_y..max_y {
+        {
+            let start_point = Point { x: min_x, y };
+            let start_dir = Point { x: 1, y: 0 };
+            calcs.push(calc_from_loc(&map, LaserLocation { current_loc: start_point, current_direction: start_dir }));
+        }
+        {
+            let start_point = Point { x: max_x-1, y };
+            let start_dir = Point { x: -1, y: 0 };
+            calcs.push(calc_from_loc(&map, LaserLocation { current_loc: start_point, current_direction: start_dir }));
+        }
+    }
+
+    println!("{:?}", calcs.iter().max().unwrap());
 }
