@@ -1,11 +1,8 @@
 use std::collections::HashMap;
-use std::fs::File;
 use std::io::{BufRead, Write};
-use std::process::Command;
 use petgraph::algo::dijkstra;
 use petgraph::{Graph};
 use petgraph::graph::{NodeIndex};
-use petgraph::dot::{Dot, Config};
 use std::slice::Iter;
 use petgraph::visit::NodeRef;
 use self::Direction::*;
@@ -112,17 +109,17 @@ impl std::ops::AddAssign for MyPoint {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct MyNodeWeight {
+struct MyNode {
     dir : Direction,
     coord: MyPoint
 }
 
-impl MyNodeWeight {
-    fn get_accessible_nodes(&self, min_one_dir: i64, max_one_dir: i64) -> Vec<MyNodeWeight> {
+impl MyNode {
+    fn get_accessible_nodes(&self, min_one_dir: i64, max_one_dir: i64) -> Vec<MyNode> {
         let mut res = Vec::new();
         for dir in self.dir.get_left_right_neigbhours() {
             for i in min_one_dir..=max_one_dir {
-                res.push(MyNodeWeight{coord: self.coord + (dir.get_vector())*i, dir: dir.get_opposite()});
+                res.push(MyNode {coord: self.coord + (dir.get_vector())*i, dir: dir.get_opposite()});
             }
         }
         res
@@ -149,8 +146,8 @@ fn get_weights_between(from: &MyPoint, to: &MyPoint, chars: &Vec<Vec<i32>>) -> i
     return sum;
 }
 
-fn parse_graph(input: &str, min_one_dir: i64, max_one_dir: i64) -> (Graph<MyNodeWeight, i32>, HashMap<MyNodeWeight, NodeIndex>) {
-    let mut graph = Graph::<MyNodeWeight, i32>::new();
+fn parse_graph(input: &str, min_one_dir: i64, max_one_dir: i64) -> (Graph<MyNode, i32>, HashMap<MyNode, NodeIndex>) {
+    let mut graph = Graph::<MyNode, i32>::new();
     let weights = input.lines().map(|puzzle_line|{puzzle_line
         .chars().map(|c|{c.to_digit(10).unwrap() as i32}).collect::<Vec<i32>>()}).collect::<Vec<Vec<i32>>>();
     let mut coord_to_node = HashMap::new();
@@ -158,7 +155,7 @@ fn parse_graph(input: &str, min_one_dir: i64, max_one_dir: i64) -> (Graph<MyNode
         for (char_index, _) in line.chars().enumerate() {
             let coord = MyPoint {x:char_index as i64, y: line_index as i64};
             for direction in Direction::iterator() {
-                let node_weight = MyNodeWeight{dir: *direction, coord:coord.clone()};
+                let node_weight = MyNode {dir: *direction, coord:coord.clone()};
                 let node_index = graph.add_node(node_weight.clone());
                 coord_to_node.insert(node_weight, node_index);
 
@@ -186,10 +183,10 @@ fn calc(input: &str, min_edge_len: i64, max_edge_len: i64) -> i32 {
     let max_x = weights[0].len() - 1;
     let max_y = weights.len() - 1;
     let (mygraph, coord_to_node) = parse_graph(input, min_edge_len, max_edge_len);
-    let start_node_weights = vec!{MyNodeWeight{dir:East, coord:MyPoint{x:0, y:0}},
-                                  MyNodeWeight{dir:South, coord:MyPoint{x:0, y:0}}};
-    let end_node_weights = vec!{MyNodeWeight{dir:North, coord:MyPoint{x:max_x as i64, y:max_y as i64}},
-                                MyNodeWeight{dir:West, coord:MyPoint{x:max_x as i64, y: max_y as i64}}};
+    let start_node_weights = vec!{MyNode {dir:East, coord:MyPoint{x:0, y:0}},
+                                  MyNode {dir:South, coord:MyPoint{x:0, y:0}}};
+    let end_node_weights = vec!{MyNode {dir:North, coord:MyPoint{x:max_x as i64, y:max_y as i64}},
+                                MyNode {dir:West, coord:MyPoint{x:max_x as i64, y: max_y as i64}}};
     let mut costs = Vec::new();
 
     for start_node in start_node_weights {
@@ -202,17 +199,6 @@ fn calc(input: &str, min_edge_len: i64, max_edge_len: i64) -> i32 {
         }
     }
     return *costs.iter().min().unwrap();
-}
-
-fn export_to_png(graph: &Graph<MyNodeWeight, i32>, filename: &str) {
-    let dot_data = format!("{:?}", Dot::with_config(graph, &[Config::EdgeNoLabel]));
-    let mut file = File::create(filename).expect("Error creating DOT file");
-    file.write_all(dot_data.as_bytes()).expect("Error writing to DOT file");
-    Command::new("sh")
-        .arg("-c")
-        .arg("dot -Tpng sajt.dot -o sajt.png")
-        .output()
-        .expect("failed to execute process");
 }
 
 

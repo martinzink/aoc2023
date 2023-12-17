@@ -1,66 +1,106 @@
-use regex::Regex;
+type Input<'a> = Vec<(&'a [u8], Vec<usize>)>;
 
-const EXAMPLE: &str = include_str!("example.txt");
-const INPUT: &str = include_str!("input.txt");
-
-fn check_line(line: &str, conditions: &Vec<u8>) -> bool {
-    let asd = line.split('.').filter(|x|{!x.is_empty()}).collect::<Vec<&str>>().iter().map(|str|{return str.len() as u8}).collect::<Vec<u8>>();
-    return asd == *conditions;
+pub fn parse(input: &str) -> Input<'_> {
+    input
+        .lines()
+        .map(|line| {
+            let (prefix, suffix) = line.split_once(' ').unwrap();
+            let first = prefix.as_bytes();
+            let second = suffix.split(',').map(|s| {s.parse::<usize>()}.unwrap()).collect();
+            (first, second)
+        })
+        .collect()
 }
 
-fn generate_strings(pattern: &str) -> Vec<String> {
-    if !pattern.contains('?') {
-        return vec![pattern.to_string()];
-    }
-
-    let index = pattern.find('?').unwrap();
-    let (prefix, suffix) = pattern.split_at(index);
-
-    let pattern_a = format!("{}{}{}", &prefix, '#', &suffix[1..]);
-    let pattern_b = format!("{}{}{}", &prefix, '.', &suffix[1..]);
-
-    let mut strings_a = generate_strings(&pattern_a);
-    let mut strings_b = generate_strings(&pattern_b);
-
-    strings_a.append(&mut strings_b);
-    strings_a
+pub fn part1(input: &Input<'_>) -> u64 {
+    solve(input, 1)
 }
 
-fn process_line(line: &str) -> i64 {
+pub fn part2(input: &Input<'_>) -> u64 {
+    solve(input, 5)
+}
 
-    if line.is_empty() {
-        return 0;
-    }
-    let split_line = line.split_ascii_whitespace().collect::<Vec<&str>>();
-    assert!(split_line.len() == 2);
+pub fn solve(input: &Input<'_>, repeat: usize) -> u64 {
+    let mut result = 0;
+    let mut pattern = Vec::new();
+    let mut springs = Vec::new();
+    let mut broken = vec![0; 200];
+    let mut table = vec![0; 200 * 50];
 
-    let sprinkles_str = split_line.get(0).unwrap();
-    let data_str = split_line.get(1).unwrap();
-    let data = data_str.split(',').map(|s| s.parse().unwrap()).collect::<Vec<u8>>();
+    for (first, second) in input {
+        pattern.clear();
+        springs.clear();
 
-    let strings =  generate_strings(sprinkles_str);
-    let mut counter = 0;
-    for string in strings {
-        if check_line(string.as_str(), &data) {
-            println!("MATCH {}", string);
-            counter +=1;
+        for _ in 1..repeat {
+            pattern.extend_from_slice(first);
+            pattern.push(b'?');
+            springs.extend_from_slice(second);
         }
+
+        pattern.extend_from_slice(first);
+        pattern.push(b'.');
+        springs.extend_from_slice(second);
+
+        let mut sum = 0;
+        broken.push(0);
+
+        for (i, &b) in pattern.iter().enumerate() {
+            if b != b'.' {
+                sum += 1;
+            }
+            broken[i + 1] = sum;
+        }
+
+        let wiggle = pattern.len() - springs.iter().sum::<usize>() - springs.len() + 1;
+
+        let size = springs[0];
+        let mut sum = 0;
+        let mut valid = true;
+
+        for i in 0..wiggle {
+            if pattern[i + size] == b'#' {
+                sum = 0;
+            } else if valid && broken[i + size] - broken[i] == size {
+                sum += 1;
+            }
+
+            table[i + size] = sum;
+
+            valid &= pattern[i] != b'#';
+        }
+
+        let mut start = size + 1;
+
+        for (row, &size) in springs.iter().enumerate().skip(1) {
+            let previous = (row - 1) * pattern.len();
+            let current = row * pattern.len();
+
+            sum = 0;
+
+            for i in start..start + wiggle {
+                if pattern[i + size] == b'#' {
+                    sum = 0;
+                } else if table[previous + i - 1] > 0
+                    && pattern[i - 1] != b'#'
+                    && broken[i + size] - broken[i] == size
+                {
+                    sum += table[previous + i - 1];
+                }
+
+                table[current + i + size] = sum;
+            }
+
+            start += size + 1;
+        }
+
+        result += sum;
     }
 
-    return counter;
+    result
 }
 
-fn star_one(input: &str) -> i64 {
-    let mut sum = 0;
-    for line in input.lines() {
-        let count = process_line(line);
-        println!("{} has {}", line, count);
-        sum += count;
-
-    }
-    return sum;
-}
-
-fn main() {
-    println!("Day 12 Star one on EXAMPLE {}", star_one(INPUT));
+fn main()  {
+    const EXAMPLE: &str = include_str!("example.txt");
+    const INPUT: &str = include_str!("input.txt");
+    println!("{}", part2(&parse(INPUT)));
 }
