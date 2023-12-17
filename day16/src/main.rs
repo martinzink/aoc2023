@@ -156,5 +156,5 @@ fn main() {
         }
     }
 
-    println!("{:?}", calcs.iter().max().unwrap());
+    println!("Best is {:?} from {}", calcs.iter().max().unwrap(), calcs.len());
 }
