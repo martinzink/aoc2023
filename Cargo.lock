@@ -125,6 +125,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "day18"
+version = "0.1.0"
+dependencies = [
+ "geo",
+]
+
+[[package]]
 name = "day2"
 version = "0.1.0"
 
