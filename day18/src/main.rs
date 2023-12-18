@@ -56,14 +56,11 @@ fn get_edges(input: &str) -> i64{
         perimeter += input_line.length;
     }
     let mut shoe = 0;
-    // for vertex_window in vertices.windows(2) {
-    //     shoe += (vertex_window[0].x * vertex_window[1].y);
-    //     shoe -= (vertex_window[0].y * vertex_window[1].x);
-    // }
-    // return (shoe + perimeter)/2+1;
-    let vertices_f64 = vertices.iter().map(|c|{Coord{x:c.x as f64, y:c.y as f64}}).collect::<Vec<Coord<f64>>>();
-    let polygon = Polygon::new(LineString::new(vertices_f64.clone()), vec![]);
-    return (polygon.unsigned_area()+polygon.exterior().euclidean_length()/2.0 + 1.0) as i64;
+    for vertex_window in vertices.windows(2) {
+        shoe += (vertex_window[0].x * vertex_window[1].y);
+        shoe -= (vertex_window[0].y * vertex_window[1].x);
+    }
+    return (shoe + perimeter)/2+1;
 }
 
 fn main() {
