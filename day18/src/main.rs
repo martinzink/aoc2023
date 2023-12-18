@@ -60,7 +60,9 @@ fn get_edges(input: &str) -> i64{
         shoe += (vertex_window[0].x * vertex_window[1].y);
         shoe -= (vertex_window[0].y * vertex_window[1].x);
     }
-    return (shoe + perimeter)/2+1;
+    let shoe_area = shoe/2;  // Shoelace formula
+    let inside_points = shoe_area - (perimeter/2) + 1;  // Pick's theorem
+    return inside_points + perimeter;
 }
 
 fn main() {
