@@ -182,23 +182,21 @@ fn calc(input: &str, min_edge_len: i64, max_edge_len: i64) -> i32 {
         .chars().map(|c|{c.to_digit(10).unwrap() as i32}).collect::<Vec<i32>>()}).collect::<Vec<Vec<i32>>>();
     let max_x = weights[0].len() - 1;
     let max_y = weights.len() - 1;
-    let (mygraph, coord_to_node) = parse_graph(input, min_edge_len, max_edge_len);
-    let start_node_weights = vec!{MyNode {dir:East, coord:MyPoint{x:0, y:0}},
-                                  MyNode {dir:South, coord:MyPoint{x:0, y:0}}};
-    let end_node_weights = vec!{MyNode {dir:North, coord:MyPoint{x:max_x as i64, y:max_y as i64}},
-                                MyNode {dir:West, coord:MyPoint{x:max_x as i64, y: max_y as i64}}};
-    let mut costs = Vec::new();
+    let (mut mygraph, coord_to_node) = parse_graph(input, min_edge_len, max_edge_len);
+    let start_node_id_1 = coord_to_node.get(&MyNode { dir: East, coord: MyPoint { x: 0, y: 0 } }).unwrap();
+    let start_node_id_2 = coord_to_node.get(&MyNode { dir: South, coord: MyPoint { x: 0, y: 0 } }).unwrap();
 
-    for start_node in start_node_weights {
-        for end_node in &end_node_weights {
-            let start_node_index = coord_to_node.get(&start_node).unwrap();
-            let end_node_index = coord_to_node.get(&end_node).unwrap();
-            let res = dijkstra(&mygraph, *start_node_index, Some(*end_node_index), |e| *e.weight());
+    let end_node_id_1 = coord_to_node.get(&MyNode {dir:North, coord:MyPoint{x:max_x as i64, y:max_y as i64}}).unwrap();
+    let end_node_id_2 = coord_to_node.get(&MyNode {dir:West, coord:MyPoint{x:max_x as i64, y:max_y as i64}}).unwrap();;
 
-            costs.push(*res.get(end_node_index).unwrap());
-        }
-    }
-    return *costs.iter().min().unwrap();
+    mygraph.add_edge(*start_node_id_1, *start_node_id_2, 0);
+    mygraph.add_edge(*start_node_id_2, *start_node_id_1, 0);
+
+    mygraph.add_edge(*end_node_id_1, *end_node_id_2, 0);
+    mygraph.add_edge(*end_node_id_2, *end_node_id_1, 0);
+
+    let res = dijkstra(&mygraph, *start_node_id_1, Some(*end_node_id_1), |e| *e.weight());
+    return *res.get(end_node_id_1).unwrap();
 }
 
 
