@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::ptr::hash;
 
 const EXAMPLE: &str = include_str!("example.txt");
 const INPUT: &str = include_str!("input.txt");
@@ -106,7 +105,7 @@ impl Rule {
         return None;
     }
 
-    fn split_at_part(&self, part_range: &PartRange) -> Vec<(PartRange)> {
+    fn split_at_part(&self, part_range: &PartRange) -> Vec<PartRange> {
         if self.duck.is_none() {
             let mut whole_range = part_range.clone();
             whole_range.curr_workflow = Some(self.target_workflow_id.clone());
@@ -115,7 +114,7 @@ impl Rule {
         let (below_cat_range, above_cat_range) = part_range.ranges.get(&self.category.unwrap()).unwrap().split_at(self.target_val.unwrap(), self.duck.unwrap());
         let below_range = if below_cat_range.is_some() {
             let mut below_range = part_range.clone();
-            let mut cat_range = below_range.ranges.get_mut(&self.category.unwrap()).unwrap();
+            let cat_range = below_range.ranges.get_mut(&self.category.unwrap()).unwrap();
             *cat_range = below_cat_range.unwrap();
             match self.duck.unwrap() {
                 '<' => { below_range.curr_workflow = Some(self.target_workflow_id.clone());}
@@ -129,7 +128,7 @@ impl Rule {
 
         let above_range = if above_cat_range.is_some() {
             let mut above_range = part_range.clone();
-            let mut cat_range = above_range.ranges.get_mut(&self.category.unwrap()).unwrap();
+            let cat_range = above_range.ranges.get_mut(&self.category.unwrap()).unwrap();
             *cat_range = above_cat_range.unwrap();
             match self.duck.unwrap() {
                 '>' => { above_range.curr_workflow = Some(self.target_workflow_id.clone());}
@@ -176,29 +175,30 @@ impl WorkFlow{
     }
 }
 
-
-fn part1() {
-    let (workflows_str, parts_str) = INPUT.split_once("\n\n").unwrap();
+fn parse_workflows(workflows_str: &str) -> HashMap<String, WorkFlow> {
     let mut workflows = HashMap::new();
     workflows_str.lines().map(|workflow_line| {WorkFlow::new(workflow_line)}).for_each(|work_flow| {
         workflows.insert(work_flow.workflow_id.clone(), work_flow);
     });
+    return workflows;
+}
+
+
+fn part1() -> i64 {
+    let (workflows_str, parts_str) = INPUT.split_once("\n\n").unwrap();
+    let workflows = parse_workflows(workflows_str);
     let parts = parts_str.lines().map(|part_line| {Part::new(part_line)}).collect::<Vec<Part>>();
-    let mut accepted = 0;
-    let mut rejected = 0;
 
     let mut res = 0;
-    'outer: for part in &parts {
+    for part in &parts {
         let mut next_workflow = workflows.get("in").unwrap();
         'inner: loop {
             match next_workflow.route(part).as_str() {
                 "A" => {
                     part.values.values().for_each(|v| res+= v);
-                    accepted += 1;
                     break 'inner;
                 },
                 "R" => {
-                    rejected += 1;
                     break 'inner;
                 },
                 x => {
@@ -207,9 +207,7 @@ fn part1() {
             }
         }
     }
-
-    println!("{:?}", res);
-
+    return res;
 }
 #[derive(Debug, Clone)]
 
@@ -224,7 +222,7 @@ impl PartRange {
         let mut res = vec!();
         let mut work_queue = vec!(self.clone());
 
-        let mut rule_iter = &mut workflow.rules.iter();
+        let rule_iter = &mut workflow.rules.iter();
         while !work_queue.is_empty() {
             let rule = rule_iter.next().unwrap();
             let mut new_work_parts = vec!();
@@ -244,12 +242,9 @@ impl PartRange {
     }
 }
 
-fn main() {
-    let (workflows_str, parts_str) = INPUT.split_once("\n\n").unwrap();
-    let mut workflows = HashMap::new();
-    workflows_str.lines().map(|workflow_line| {WorkFlow::new(workflow_line)}).for_each(|work_flow| {
-        workflows.insert(work_flow.workflow_id.clone(), work_flow);
-    });
+fn part_2() -> i64 {
+    let (workflows_str, _) = INPUT.split_once("\n\n").unwrap();
+    let workflows = parse_workflows(workflows_str);
     let mut hashmap = HashMap::new();
     hashmap.insert('x', CategoryRange{start:1, end:4000});
     hashmap.insert('m', CategoryRange{start:1, end:4000});
@@ -259,7 +254,7 @@ fn main() {
     let mut accepteds = vec!();
     while !part_ranges.is_empty() {
         let part_range= part_ranges.pop().unwrap();
-        let curr_workflow = part_range.curr_workflow.clone().unwrap();;
+        let curr_workflow = part_range.curr_workflow.clone().unwrap();
         if curr_workflow.as_str() == "A" {
             accepteds.push(part_range);
         } else if curr_workflow.as_str() == "R" {
@@ -271,8 +266,13 @@ fn main() {
     let mut res = 0;
     for accepted in accepteds {
         let mut accepted_res = 1;
-        accepted.ranges.values().for_each(|a| {accepted_res *= (a.end-a.start+1)});
+        accepted.ranges.values().for_each(|a| {accepted_res *= a.end-a.start+1});
         res += accepted_res;
     }
-    println!("{:?}",res);
+    return res;
+}
+
+fn main() {
+    println!("{}", part1());
+    println!("{}", part_2());
 }
