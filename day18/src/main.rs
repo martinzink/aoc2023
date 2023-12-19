@@ -1,5 +1,5 @@
 use std::cmp;
-use geo::{Contains, Area, Coord, LineString, Polygon, EuclideanLength};
+use geo::{Coord};
 
 const EXAMPLE: &str = include_str!("example.txt");
 const INPUT: &str = include_str!("input.txt");

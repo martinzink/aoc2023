@@ -195,6 +195,7 @@ fn calc(input: &str, min_edge_len: i64, max_edge_len: i64) -> i32 {
     mygraph.add_edge(*end_node_id_1, *end_node_id_2, 0);
     mygraph.add_edge(*end_node_id_2, *end_node_id_1, 0);
 
+
     let res = dijkstra(&mygraph, *start_node_id_1, Some(*end_node_id_1), |e| *e.weight());
     return *res.get(end_node_id_1).unwrap();
 }
