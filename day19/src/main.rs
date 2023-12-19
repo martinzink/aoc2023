@@ -1,7 +1,47 @@
 use std::collections::HashMap;
+use std::ptr::hash;
 
 const EXAMPLE: &str = include_str!("example.txt");
 const INPUT: &str = include_str!("input.txt");
+
+#[derive(PartialEq, Debug, Clone)]
+pub struct CategoryRange {
+    pub start: i64,
+    pub end: i64,
+}
+
+impl CategoryRange {
+    pub(crate) fn new(start: i64, length: i64) -> Self {
+        Self {
+            start,
+            end: start + length,
+        }
+    }
+
+    pub fn split_at(&self, at: i64, duck: char) -> (Option<CategoryRange>, Option<CategoryRange>) {
+        if self.start > at {
+            return (None, Some(self.clone()))
+        }
+        if self.end < at {
+            return (Some(self.clone()), None)
+
+        }
+        let bellow_correcter = if duck == '<' {1} else {0};
+        let upper_correcter = if duck == '>' {1} else {0};
+        return (
+            Some(CategoryRange::new(self.start, at - self.start - bellow_correcter)),
+            Some(CategoryRange::new(at+upper_correcter, self.end - at - upper_correcter)),
+        );
+    }
+
+    pub fn offset_to(&self, dest: i64) -> Self {
+        let length = self.end - self.start;
+        Self {
+            start: dest,
+            end: dest + length,
+        }
+    }
+}
 
 #[derive(Debug)]
 struct Part {
@@ -24,7 +64,10 @@ impl Part {
 
 #[derive(Debug)]
 struct Rule {
-    rule_string: String,
+    category: Option<char>,
+    duck: Option<char>,
+    target_val: Option<i64>,
+    target_workflow_id: String
 }
 
 fn test(part: &Part, category: char, duck: char, target_val: i64) -> bool {
@@ -38,26 +81,73 @@ fn test(part: &Part, category: char, duck: char, target_val: i64) -> bool {
 
 impl Rule {
     fn new(rule_str: &str)->Self {
-        return Self{rule_string: rule_str.to_string()};
-
-    }
-
-    fn test_part(&self, part: &Part) -> Option<String> {
-        if !self.rule_string.contains(':') {
-            return Some(self.rule_string.clone());
+        if !rule_str.contains(':') {
+            return Self{category:None, duck:None, target_val:None, target_workflow_id:rule_str.to_string()};
         }
 
-        let (test_str, target_workflow_id) = self.rule_string.split_once(':').unwrap();
+        let (test_str, target_workflow_id) = rule_str.split_once(':').unwrap();
         let mut chars = test_str.chars();
         let category = chars.next().unwrap();
         let duck = chars.next().unwrap();
         let target_val = chars.as_str().parse::<i64>().unwrap();
 
-        if test(part, category, duck, target_val) {
-            return Some(target_workflow_id.to_string());
+        return Self{category:Some(category), duck:Some(duck), target_val:Some(target_val), target_workflow_id:target_workflow_id.to_string()};
+    }
+
+    fn test_part(&self, part: &Part) -> Option<String> {
+        if self.duck.is_none() {
+            return Some(self.target_workflow_id.clone());
+        }
+
+        if test(part, self.category.unwrap(), self.duck.unwrap(), self.target_val.unwrap()) {
+            return Some(self.target_workflow_id.clone());
         }
 
         return None;
+    }
+
+    fn split_at_part(&self, part_range: &PartRange) -> Vec<(PartRange)> {
+        if self.duck.is_none() {
+            let mut whole_range = part_range.clone();
+            whole_range.curr_workflow = Some(self.target_workflow_id.clone());
+            return vec!(whole_range);
+        }
+        let (below_cat_range, above_cat_range) = part_range.ranges.get(&self.category.unwrap()).unwrap().split_at(self.target_val.unwrap(), self.duck.unwrap());
+        let below_range = if below_cat_range.is_some() {
+            let mut below_range = part_range.clone();
+            let mut cat_range = below_range.ranges.get_mut(&self.category.unwrap()).unwrap();
+            *cat_range = below_cat_range.unwrap();
+            match self.duck.unwrap() {
+                '<' => { below_range.curr_workflow = Some(self.target_workflow_id.clone());}
+                '>' => { below_range.curr_workflow = None;}
+                _ => {panic!{"Invalid duck"}}
+            }
+            Some(below_range)
+        } else {
+            None
+        };
+
+        let above_range = if above_cat_range.is_some() {
+            let mut above_range = part_range.clone();
+            let mut cat_range = above_range.ranges.get_mut(&self.category.unwrap()).unwrap();
+            *cat_range = above_cat_range.unwrap();
+            match self.duck.unwrap() {
+                '>' => { above_range.curr_workflow = Some(self.target_workflow_id.clone());}
+                '<' => { above_range.curr_workflow = None;}
+                _ => {panic!{"Invalid duck"}}
+            }
+            Some(above_range)
+        } else {
+            None
+        };
+        let mut res = vec!();
+        if below_range.is_some() {
+            res.push(below_range.unwrap());
+        }
+        if above_range.is_some() {
+            res.push(above_range.unwrap());
+        }
+        return res;
     }
 }
 #[derive(Debug)]
@@ -87,7 +177,7 @@ impl WorkFlow{
 }
 
 
-fn main() {
+fn part1() {
     let (workflows_str, parts_str) = INPUT.split_once("\n\n").unwrap();
     let mut workflows = HashMap::new();
     workflows_str.lines().map(|workflow_line| {WorkFlow::new(workflow_line)}).for_each(|work_flow| {
@@ -120,4 +210,69 @@ fn main() {
 
     println!("{:?}", res);
 
+}
+#[derive(Debug, Clone)]
+
+struct PartRange {
+    ranges: HashMap<char, CategoryRange>,
+    curr_workflow: Option<String>
+}
+
+impl PartRange {
+    fn split_based_on_workflow(&self, work_flows: &HashMap<String, WorkFlow>) -> Vec<PartRange> {
+        let workflow = work_flows.get(&self.curr_workflow.clone().unwrap()).unwrap();
+        let mut res = vec!();
+        let mut work_queue = vec!(self.clone());
+
+        let mut rule_iter = &mut workflow.rules.iter();
+        while !work_queue.is_empty() {
+            let rule = rule_iter.next().unwrap();
+            let mut new_work_parts = vec!();
+            for work_part in &work_queue {
+                let new_parts = rule.split_at_part(work_part);
+                for new_part in &new_parts {
+                    if new_part.curr_workflow.is_some() {
+                        res.push(new_part.clone());
+                    } else {
+                        new_work_parts.push(new_part.clone());
+                    }
+                }
+            }
+            work_queue = new_work_parts;
+        }
+        return res;
+    }
+}
+
+fn main() {
+    let (workflows_str, parts_str) = INPUT.split_once("\n\n").unwrap();
+    let mut workflows = HashMap::new();
+    workflows_str.lines().map(|workflow_line| {WorkFlow::new(workflow_line)}).for_each(|work_flow| {
+        workflows.insert(work_flow.workflow_id.clone(), work_flow);
+    });
+    let mut hashmap = HashMap::new();
+    hashmap.insert('x', CategoryRange{start:1, end:4000});
+    hashmap.insert('m', CategoryRange{start:1, end:4000});
+    hashmap.insert('a', CategoryRange{start:1, end:4000});
+    hashmap.insert('s', CategoryRange{start:1, end:4000});
+    let mut part_ranges = vec!(PartRange{ranges:hashmap, curr_workflow:Some("in".to_string())});
+    let mut accepteds = vec!();
+    while !part_ranges.is_empty() {
+        let part_range= part_ranges.pop().unwrap();
+        let curr_workflow = part_range.curr_workflow.clone().unwrap();;
+        if curr_workflow.as_str() == "A" {
+            accepteds.push(part_range);
+        } else if curr_workflow.as_str() == "R" {
+
+        } else {
+            part_ranges.extend(part_range.split_based_on_workflow(&workflows));
+        }
+    }
+    let mut res = 0;
+    for accepted in accepteds {
+        let mut accepted_res = 1;
+        accepted.ranges.values().for_each(|a| {accepted_res *= (a.end-a.start+1)});
+        res += accepted_res;
+    }
+    println!("{:?}",res);
 }
