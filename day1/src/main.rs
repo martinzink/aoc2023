@@ -1,6 +1,17 @@
 const EXAMPLE: &str = include_str!("example.txt");
 const INPUT: &str = include_str!("input.txt");
 
+fn star_one(input_str: &str) -> u32 {
+    let mut sum = 0;
+    for input_line in input_str.lines() {
+        let first_digit = input_line.chars().nth(input_line.find(char::is_numeric).unwrap()).unwrap().to_digit(10).unwrap();
+        let last_digit = input_line.chars().nth(input_line.rfind(char::is_numeric).unwrap()).unwrap().to_digit(10).unwrap();
+
+        sum = sum + (first_digit*10) + last_digit
+    }
+    return sum;
+}
+
 fn star_two(input_str: &str) -> u32 {
     let mut sum = 0;
     for input_line in input_str.lines() {
@@ -24,6 +35,6 @@ fn star_two(input_str: &str) -> u32 {
 }
 
 fn main() {
-    println!("Example: {}", star_two(EXAMPLE));
-    println!("Input: {}", star_two(INPUT));
+    println!("Star one: {}", star_one(INPUT));
+    println!("Star two: {}", star_two(INPUT));
 }
