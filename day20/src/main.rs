@@ -162,12 +162,6 @@ fn main() {
         }
     }
 
-    for (node_name, node_index) in node_map {
-        let edges_count = graph.edges(node_index).count() as i64;
-        let curr_weight = graph.node_weight_mut(node_index).unwrap();
-        *curr_weight = std::format!("{} with {}", curr_weight, edges_count-1);
-    }
-
     let (node_before_rx, _) = module_wiring.iter().find(|(input, outputs)|{outputs.contains(&"rx".to_string())}).unwrap();
     let mut inputs_of_node_before_rx = module_wiring.iter().filter(|(input, outputs)|{outputs.contains(node_before_rx)}).map(|(a, b)|{a}).collect::<Vec<&String>>();
 
