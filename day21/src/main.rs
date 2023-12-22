@@ -4,7 +4,7 @@ use petgraph::algo::dijkstra;
 use petgraph::Graph;
 use petgraph::graph::UnGraph;
 
-const EXAMPLE: &str = include_str!("example.txt");
+const EXAMPLE: &str = include_str!("example2.txt");
 const INPUT: &str = include_str!("input.txt");
 
 trait GetNeighbours {
@@ -62,8 +62,5 @@ fn main() {
     }
     let (start_index, _) = coord_to_node.get(&start_coord.unwrap()).unwrap();
 
-    let distances = dijkstra(&mygraph, *start_index, None, |_| {1});
-    let number_of_steps = 64;
-    let number_of_nodes = distances.values().filter(|&&distance|{distance<=number_of_steps && distance%2==number_of_steps%2}).count();
-    println!("{}", number_of_nodes);
+    let distances = dijkstra(&mygraph, *start_index, None, |_| {1}).iter().map(|(a,b)|{(*mygraph.node_weight(*a).unwrap(), *b)}).collect::<HashMap<Coord<i64>, i32>>();
 }
